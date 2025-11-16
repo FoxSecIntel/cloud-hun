@@ -3,19 +3,19 @@ Description: Minimal intentionally misconfigured lab for cloud-hun demo
 
 Parameters:
   LatestAmiId:
-    Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
-    Default: /aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64
+    Type: String
+    Default: ami-0123456789abcdef0
 
 Resources:
   PublicBucket:
     Type: AWS::S3::Bucket
     Properties:
-      AccessControl: PublicRead
+      AccessControl: "PublicRead"
 
   PublicInstanceSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupDescription: Public SSH
+      GroupDescription: "Public SSH"
       SecurityGroupIngress:
         - IpProtocol: tcp
           FromPort: 22
@@ -36,8 +36,3 @@ Resources:
       UserName: cloud-hun-wideopen
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/AdministratorAccess
-
-Parameters:
-  LatestAmiId:
-    Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
-    Default: /aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64
