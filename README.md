@@ -38,3 +38,14 @@ chmod +x scripts/iam_audit.sh
 ./scripts/iam_audit.sh
 
 You need AWS CLI configured (aws configure) with an IAM user that has permission to read IAM, S3, EC2, etc.
+```
+---
+
+## Roadmap
+
+- Add more IAM checks (MFA per-user, access key age)
+- Extend public exposure scan (ALB, CloudFront)
+- Add sample vulnerable lab (CloudFormation)
+- GitHub Actions workflow to run read-only checks
+
+---
