@@ -30,7 +30,7 @@ The design principles:
 
 ```bash
 # clone
-git clone https://github.com/<your-username>/cloud-hun.git
+git clone https://github.com/FoxSecIntel/cloud-hun.git
 cd cloud-hun
 
 # run IAM audit
