@@ -1,6 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+if ! command -v aws >/dev/null 2>&1; then
+  echo "[!] aws CLI not found. Install and configure AWS CLI v2." >&2
+  exit 1
+fi
+
 echo "=== cloud-hun: IAM / account hygiene audit ==="
 echo
 
