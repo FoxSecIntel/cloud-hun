@@ -1,8 +1,26 @@
+![Status](https://img.shields.io/badge/status-maintained-brightgreen)
+![Python](https://img.shields.io/badge/python-3.8%2B-blue)
+
 # cloud-hun
 
-`cloud-hun` is a lightweight cloud exposure and misconfiguration hunter for AWS and GCP.
+A cloud exposure and misconfiguration hunting toolkit for practical defensive operations.
 
-It is built for practical defensive workflows used by Tier 1 and Tier 2 analysts.
+## Why this project
+
+- **Impact:** Improves visibility into cloud identity and exposure risks.
+- **Scale:** Works in repeatable CLI workflows for AWS and GCP environments.
+- **Use case:** IAM hygiene audits, external exposure detection, and controlled remediation planning.
+
+## Demo media
+
+- Screenshot: ![cloud-hun terminal screenshot](docs/media/terminal-screenshot.png)
+- Demo GIF: ![cloud-hun demo](docs/media/demo.gif)
+
+## Capability snapshot
+
+- IAM posture checks for AWS and GCP
+- Public exposure scanning with JSON support
+- Plan-first remediation workflow for controlled hardening
 
 ## Focus areas
 
