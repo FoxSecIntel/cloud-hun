@@ -79,3 +79,12 @@ Run unified wrapper:
 - Use read-only identities for audit collection where possible.
 - Run remediation only with explicit approval and change control.
 - Validate impact in test or lab accounts before production.
+
+## Quick Demo
+
+```bash
+# 1) Run a core check
+# 2) Request JSON output
+# 3) Pipe into jq for analyst workflows
+```
+
