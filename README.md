@@ -20,6 +20,8 @@ A cloud exposure and misconfiguration hunting toolkit for practical defensive op
 
 - IAM posture checks for AWS and GCP
 - Public exposure scanning with JSON support
+- Structured finding metadata: `status`, `severity`, `confidence`, and `data_source`
+- Extended AWS checks for S3 policy exposure and risky Security Group world-open ingress
 - Plan-first remediation workflow for controlled hardening
 
 ## Focus areas
