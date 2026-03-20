@@ -8,6 +8,7 @@ from typing import Any, Dict, List
 
 
 RISKY_PORTS = {22, 3389, 5432, 3306, 6379, 9200, 5601, 27017}
+VERSION = "1.0.0"
 
 
 def run_aws(args: List[str]) -> dict:
@@ -286,6 +287,7 @@ def list_api_gateways() -> List[Dict[str, Any]]:
 def main() -> int:
     parser = argparse.ArgumentParser(description="AWS public exposure scan")
     parser.add_argument("--json", action="store_true", help="Emit JSON output")
+    parser.add_argument("--version", action="version", version=f"public-exposure-scan {VERSION}")
     args = parser.parse_args()
 
     findings: list[dict[str, Any]] = []
