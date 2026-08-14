@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 if [[ "${1:-}" == "-a" || "${1:-}" == "--author" ]]; then
   echo "Author: FoxSecIntel"
-  echo "Repository: https://github.com/FoxSecIntel/cloud-hun
+  echo "Repository: https://github.com/FoxSecIntel/cloud-hun"
   echo "Tool: fix.sh"
   exit 0
 fi
@@ -37,21 +37,29 @@ command -v aws >/dev/null 2>&1 || { echo "aws CLI not found"; exit 1; }
 ACCOUNT_ID=$(aws sts get-caller-identity --query 'Account' --output text)
 REGION=${AWS_REGION:-${AWS_DEFAULT_REGION:-eu-west-1}}
 
-do_or_print() {
-  local cmd="$1"
+print_command() {
+  printf '%q ' "$@"
+  printf '\n'
+}
+
+run_or_print() {
   if [[ "$MODE" == "plan" ]]; then
-    echo "[PLAN] $cmd"
+    printf '[PLAN] '
+    print_command "$@"
   else
-    echo "[APPLY] $cmd"
-    eval "$cmd"
+    printf '[APPLY] '
+    print_command "$@"
+    "$@"
   fi
 }
 
 echo "=== cloud-hun: quick hygiene hardening (${MODE}) ==="
 
-do_or_print "aws s3control put-public-access-block --account-id ${ACCOUNT_ID} --public-access-block-configuration '{\"BlockPublicAcls\":true,\"IgnorePublicAcls\":true,\"BlockPublicPolicy\":true,\"RestrictPublicBuckets\":true}'"
+run_or_print aws s3control put-public-access-block \
+  --account-id "${ACCOUNT_ID}" \
+  --public-access-block-configuration '{"BlockPublicAcls":true,"IgnorePublicAcls":true,"BlockPublicPolicy":true,"RestrictPublicBuckets":true}'
 
-do_or_print "aws guardduty list-detectors --region ${REGION} --query 'DetectorIds' --output text"
+run_or_print aws guardduty list-detectors --region "${REGION}" --query 'DetectorIds' --output text
 if [[ "$MODE" == "apply" ]]; then
   ids=$(aws guardduty list-detectors --region "$REGION" --query 'DetectorIds' --output text || true)
   if [[ -z "$ids" || "$ids" == "None" ]]; then
@@ -62,7 +70,7 @@ if [[ "$MODE" == "apply" ]]; then
   fi
 fi
 
-do_or_print "aws securityhub describe-hub --region ${REGION}"
+run_or_print aws securityhub describe-hub --region "${REGION}"
 if [[ "$MODE" == "apply" ]]; then
   if ! aws securityhub describe-hub --region "$REGION" >/dev/null 2>&1; then
     aws securityhub enable-security-hub --region "$REGION" >/dev/null

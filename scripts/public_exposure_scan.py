@@ -9,6 +9,7 @@ from typing import Any, Dict, List
 
 RISKY_PORTS = {22, 3389, 5432, 3306, 6379, 9200, 5601, 27017}
 VERSION = "1.0.0"
+SEVERITY_ORDER = {"info": 0, "warn": 1, "medium": 2, "high": 3, "critical": 4}
 
 
 def run_aws(args: List[str]) -> dict:
@@ -49,6 +50,18 @@ def is_policy_public(policy_text: str) -> bool:
                     return True
 
     return False
+
+
+def filter_findings_by_min_severity(
+    findings: List[Dict[str, Any]],
+    min_severity: str,
+) -> List[Dict[str, Any]]:
+    threshold = SEVERITY_ORDER[min_severity]
+    return [
+        finding
+        for finding in findings
+        if SEVERITY_ORDER.get(str(finding.get("severity", "info")).lower(), 0) >= threshold
+    ]
 
 
 def list_public_s3_buckets() -> List[Dict[str, Any]]:
@@ -287,6 +300,12 @@ def list_api_gateways() -> List[Dict[str, Any]]:
 def main() -> int:
     parser = argparse.ArgumentParser(description="AWS public exposure scan")
     parser.add_argument("--json", action="store_true", help="Emit JSON output")
+    parser.add_argument(
+        "--min-severity",
+        choices=tuple(SEVERITY_ORDER.keys()),
+        default="info",
+        help="Only emit findings at or above this severity",
+    )
     parser.add_argument("--version", action="version", version=f"public-exposure-scan {VERSION}")
     args = parser.parse_args()
 
@@ -295,6 +314,7 @@ def main() -> int:
     findings.extend(list_public_ec2())
     findings.extend(list_security_group_exposure())
     findings.extend(list_api_gateways())
+    findings = filter_findings_by_min_severity(findings, args.min_severity)
 
     if args.json:
         print(json.dumps(findings, indent=2))

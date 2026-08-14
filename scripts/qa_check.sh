@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 if [[ "${1:-}" == "-a" || "${1:-}" == "--author" ]]; then
   echo "Author: FoxSecIntel"
-  echo "Repository: https://github.com/FoxSecIntel/cloud-hun
+  echo "Repository: https://github.com/FoxSecIntel/cloud-hun"
   echo "Tool: qa_check.sh"
   exit 0
 fi
@@ -17,16 +17,19 @@ fi
 
 cd "$(dirname "$0")/.."
 
-echo "[1/3] Shell syntax"
+echo "[1/4] Shell syntax"
 for f in scripts/*.sh; do
   bash -n "$f"
   echo "  OK  $f"
 done
 
-echo "[2/3] Python syntax"
+echo "[2/4] Python syntax"
 python3 -m py_compile scripts/public_exposure_scan.py
 
-echo "[3/3] shellcheck"
+echo "[3/4] Python unit tests"
+python3 -m unittest discover -s tests
+
+echo "[4/4] shellcheck"
 if command -v shellcheck >/dev/null 2>&1; then
   shellcheck scripts/*.sh
 else
