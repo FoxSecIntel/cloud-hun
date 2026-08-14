@@ -11,11 +11,6 @@ A cloud exposure and misconfiguration hunting toolkit for practical defensive op
 - **Scale:** Works in repeatable CLI workflows for AWS and GCP environments.
 - **Use case:** IAM hygiene audits, external exposure detection, and controlled remediation planning.
 
-## Demo media
-
-- Screenshot: ![cloud-hun terminal screenshot](docs/media/terminal-screenshot.png)
-- Demo GIF: ![cloud-hun demo](docs/media/demo.gif)
-
 ## Capability snapshot
 
 - IAM posture checks for AWS and GCP
@@ -107,4 +102,3 @@ Run unified wrapper:
 # 2) Request JSON output
 # 3) Pipe into jq for analyst workflows
 ```
-
