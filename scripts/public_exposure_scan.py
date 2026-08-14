@@ -10,6 +10,7 @@ from typing import Any, Dict, List
 RISKY_PORTS = {22, 3389, 5432, 3306, 6379, 9200, 5601, 27017}
 VERSION = "1.0.0"
 SEVERITY_ORDER = {"info": 0, "warn": 1, "medium": 2, "high": 3, "critical": 4}
+STATUSES = ("pass", "warn", "fail", "unknown")
 
 
 def run_aws(args: List[str]) -> dict:
@@ -42,6 +43,10 @@ def is_policy_public(policy_text: str) -> bool:
         if principal == "*":
             return True
 
+        not_principal = st.get("NotPrincipal")
+        if not_principal:
+            return True
+
         if isinstance(principal, dict):
             for v in principal.values():
                 if v == "*":
@@ -61,6 +66,20 @@ def filter_findings_by_min_severity(
         finding
         for finding in findings
         if SEVERITY_ORDER.get(str(finding.get("severity", "info")).lower(), 0) >= threshold
+    ]
+
+
+def filter_findings_by_status(
+    findings: List[Dict[str, Any]],
+    status: str | None,
+) -> List[Dict[str, Any]]:
+    if status is None:
+        return findings
+
+    return [
+        finding
+        for finding in findings
+        if str(finding.get("status", "unknown")).lower() == status
     ]
 
 
@@ -306,6 +325,11 @@ def main() -> int:
         default="info",
         help="Only emit findings at or above this severity",
     )
+    parser.add_argument(
+        "--status",
+        choices=STATUSES,
+        help="Only emit findings with this status",
+    )
     parser.add_argument("--version", action="version", version=f"public-exposure-scan {VERSION}")
     args = parser.parse_args()
 
@@ -315,6 +339,7 @@ def main() -> int:
     findings.extend(list_security_group_exposure())
     findings.extend(list_api_gateways())
     findings = filter_findings_by_min_severity(findings, args.min_severity)
+    findings = filter_findings_by_status(findings, args.status)
 
     if args.json:
         print(json.dumps(findings, indent=2))
