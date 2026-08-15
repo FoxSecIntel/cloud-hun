@@ -1,7 +1,9 @@
 import unittest
 
 from scripts.public_exposure_scan import (
+    RISKY_PORTS,
     filter_findings_by_min_severity,
+    filter_findings_by_service,
     filter_findings_by_status,
     is_policy_public,
 )
@@ -53,6 +55,29 @@ class StatusFilterTests(unittest.TestCase):
         findings = [{"resource": "bucket-a", "status": "pass"}]
 
         self.assertEqual(findings, filter_findings_by_status(findings, None))
+
+
+class ServiceFilterTests(unittest.TestCase):
+    def test_filters_findings_by_service(self):
+        findings = [
+            {"resource": "bucket-a", "service": "s3"},
+            {"resource": "sg-1", "service": "security-group"},
+            {"resource": "api", "service": "apigateway"},
+        ]
+
+        filtered = filter_findings_by_service(findings, "security-group")
+
+        self.assertEqual(["sg-1"], [finding["resource"] for finding in filtered])
+
+    def test_returns_all_findings_without_service_filter(self):
+        findings = [{"resource": "bucket-a", "service": "s3"}]
+
+        self.assertEqual(findings, filter_findings_by_service(findings, None))
+
+
+class RiskyPortsTests(unittest.TestCase):
+    def test_includes_winrm_and_memcached_ports(self):
+        self.assertTrue({5985, 5986, 11211}.issubset(RISKY_PORTS))
 
 
 if __name__ == "__main__":

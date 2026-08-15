@@ -7,10 +7,11 @@ import subprocess
 from typing import Any, Dict, List
 
 
-RISKY_PORTS = {22, 3389, 5432, 3306, 6379, 9200, 5601, 27017}
+RISKY_PORTS = {22, 3389, 5432, 3306, 6379, 9200, 5601, 5985, 5986, 11211, 27017}
 VERSION = "1.0.0"
 SEVERITY_ORDER = {"info": 0, "warn": 1, "medium": 2, "high": 3, "critical": 4}
 STATUSES = ("pass", "warn", "fail", "unknown")
+SERVICES = ("s3", "ec2", "security-group", "apigateway")
 
 
 def run_aws(args: List[str]) -> dict:
@@ -80,6 +81,20 @@ def filter_findings_by_status(
         finding
         for finding in findings
         if str(finding.get("status", "unknown")).lower() == status
+    ]
+
+
+def filter_findings_by_service(
+    findings: List[Dict[str, Any]],
+    service: str | None,
+) -> List[Dict[str, Any]]:
+    if service is None:
+        return findings
+
+    return [
+        finding
+        for finding in findings
+        if str(finding.get("service", "")).lower() == service
     ]
 
 
@@ -330,6 +345,11 @@ def main() -> int:
         choices=STATUSES,
         help="Only emit findings with this status",
     )
+    parser.add_argument(
+        "--service",
+        choices=SERVICES,
+        help="Only emit findings for this service",
+    )
     parser.add_argument("--version", action="version", version=f"public-exposure-scan {VERSION}")
     args = parser.parse_args()
 
@@ -340,6 +360,7 @@ def main() -> int:
     findings.extend(list_api_gateways())
     findings = filter_findings_by_min_severity(findings, args.min_severity)
     findings = filter_findings_by_status(findings, args.status)
+    findings = filter_findings_by_service(findings, args.service)
 
     if args.json:
         print(json.dumps(findings, indent=2))

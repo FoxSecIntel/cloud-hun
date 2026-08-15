@@ -57,6 +57,7 @@ Run exposure scan:
 ```bash
 python3 scripts/public_exposure_scan.py
 python3 scripts/public_exposure_scan.py --json
+python3 scripts/public_exposure_scan.py --service security-group
 ```
 
 Run GCP IAM audit:
