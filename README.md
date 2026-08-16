@@ -5,6 +5,20 @@
 
 A cloud exposure and misconfiguration hunting toolkit for practical defensive operations.
 
+## Why this project
+
+- **Impact:** Improves visibility into cloud identity and exposure risks.
+- **Scale:** Works in repeatable CLI workflows for AWS and GCP environments.
+- **Use case:** IAM hygiene audits, external exposure detection, and controlled remediation planning.
+
+## Capability snapshot
+
+- IAM posture checks for AWS and GCP
+- Public exposure scanning with JSON support
+- Structured finding metadata: `status`, `severity`, `confidence`, and `data_source`
+- Extended AWS checks for S3 policy exposure and risky Security Group world-open ingress
+- Plan-first remediation workflow for controlled hardening
+
 ## Free security data sources
 
 `cloud-hun` can be paired with free and community security data sources to enrich exposure findings with exploitability, abuse, and internet-noise context. The table below is the front-page shortlist; see [Free Security Data Sources](docs/free-security-data-sources.md) for usage notes and constraints.
@@ -19,20 +33,6 @@ A cloud exposure and misconfiguration hunting toolkit for practical defensive op
 | [ThreatFox](https://threatfox.abuse.ch/api/) | Malware IOCs | Free / fair use | Add IP, domain, URL, and hash context to findings |
 | [GreyNoise Community](https://docs.greynoise.io/docs/using-the-greynoise-community-api) | Internet scanner context | Free API key | Separate commodity scanning from more interesting probes |
 | [AbuseIPDB](https://docs.abuseipdb.com/) | IP abuse reputation | Free API key | Add abuse confidence to public IP findings |
-
-## Why this project
-
-- **Impact:** Improves visibility into cloud identity and exposure risks.
-- **Scale:** Works in repeatable CLI workflows for AWS and GCP environments.
-- **Use case:** IAM hygiene audits, external exposure detection, and controlled remediation planning.
-
-## Capability snapshot
-
-- IAM posture checks for AWS and GCP
-- Public exposure scanning with JSON support
-- Structured finding metadata: `status`, `severity`, `confidence`, and `data_source`
-- Extended AWS checks for S3 policy exposure and risky Security Group world-open ingress
-- Plan-first remediation workflow for controlled hardening
 
 ## Focus areas
 
