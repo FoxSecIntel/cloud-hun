@@ -7,7 +7,7 @@ import subprocess
 from typing import Any, Dict, List
 
 
-RISKY_PORTS = {22, 3389, 5432, 3306, 6379, 9200, 5601, 5985, 5986, 11211, 27017}
+RISKY_PORTS = {22, 2049, 3389, 5432, 3306, 6379, 9200, 5601, 5985, 5986, 11211, 27017}
 VERSION = "1.0.0"
 SEVERITY_ORDER = {"info": 0, "warn": 1, "medium": 2, "high": 3, "critical": 4}
 STATUSES = ("pass", "warn", "fail", "unknown")
@@ -95,6 +95,20 @@ def filter_findings_by_service(
         finding
         for finding in findings
         if str(finding.get("service", "")).lower() == service
+    ]
+
+
+def exclude_findings_by_service(
+    findings: List[Dict[str, Any]],
+    excluded_service: str | None,
+) -> List[Dict[str, Any]]:
+    if excluded_service is None:
+        return findings
+
+    return [
+        finding
+        for finding in findings
+        if str(finding.get("service", "")).lower() != excluded_service
     ]
 
 
@@ -350,6 +364,11 @@ def main() -> int:
         choices=SERVICES,
         help="Only emit findings for this service",
     )
+    parser.add_argument(
+        "--exclude-service",
+        choices=SERVICES,
+        help="Suppress findings for this service",
+    )
     parser.add_argument("--version", action="version", version=f"public-exposure-scan {VERSION}")
     args = parser.parse_args()
 
@@ -361,6 +380,7 @@ def main() -> int:
     findings = filter_findings_by_min_severity(findings, args.min_severity)
     findings = filter_findings_by_status(findings, args.status)
     findings = filter_findings_by_service(findings, args.service)
+    findings = exclude_findings_by_service(findings, args.exclude_service)
 
     if args.json:
         print(json.dumps(findings, indent=2))
