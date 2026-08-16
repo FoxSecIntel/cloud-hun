@@ -19,6 +19,21 @@ A cloud exposure and misconfiguration hunting toolkit for practical defensive op
 - Extended AWS checks for S3 policy exposure and risky Security Group world-open ingress
 - Plan-first remediation workflow for controlled hardening
 
+## Free security data sources
+
+`cloud-hun` can be paired with free and community security data sources to enrich exposure findings with exploitability, abuse, and internet-noise context. The table below is the front-page shortlist; see [Free Security Data Sources](docs/free-security-data-sources.md) for usage notes and constraints.
+
+| Source | Best for | Auth | Useful `cloud-hun` angle |
+| --- | --- | --- | --- |
+| [CISA KEV](https://www.cisa.gov/known-exploited-vulnerabilities-catalog) | Known exploited CVEs | No | Flag exposed assets tied to actively exploited products |
+| [NVD CVE API](https://nvd.nist.gov/developers/vulnerabilities) | CVE, CPE, CVSS context | Optional API key | Map software and cloud service findings to vulnerability records |
+| [FIRST EPSS](https://www.first.org/epss/) | Exploit probability | No | Prioritize CVEs by likelihood of exploitation |
+| [OSV.dev](https://google.github.io/osv.dev/api/) | Open-source package vulnerabilities | No | Check tooling, dependencies, and SBOM output |
+| [URLhaus](https://urlhaus.abuse.ch/api/) | Malware URLs | Free auth key | Enrich suspicious URLs found in buckets, logs, or configs |
+| [ThreatFox](https://threatfox.abuse.ch/api/) | Malware IOCs | Free / fair use | Add IP, domain, URL, and hash context to findings |
+| [GreyNoise Community](https://docs.greynoise.io/docs/using-the-greynoise-community-api) | Internet scanner context | Free API key | Separate commodity scanning from more interesting probes |
+| [AbuseIPDB](https://docs.abuseipdb.com/) | IP abuse reputation | Free API key | Add abuse confidence to public IP findings |
+
 ## Focus areas
 
 1. **Identity hygiene**
