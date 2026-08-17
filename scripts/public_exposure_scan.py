@@ -7,7 +7,7 @@ import subprocess
 from typing import Any, Dict, List
 
 
-RISKY_PORTS = {22, 2049, 3389, 5432, 3306, 6379, 9200, 5601, 5985, 5986, 11211, 27017}
+RISKY_PORTS = {22, 139, 445, 2049, 3389, 5432, 3306, 6379, 9200, 5601, 5985, 5986, 11211, 27017}
 VERSION = "1.0.0"
 SEVERITY_ORDER = {"info": 0, "warn": 1, "medium": 2, "high": 3, "critical": 4}
 STATUSES = ("pass", "warn", "fail", "unknown")
@@ -345,9 +345,14 @@ def list_api_gateways() -> List[Dict[str, Any]]:
     return out
 
 
-def main() -> int:
+def main(argv: List[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="AWS public exposure scan")
     parser.add_argument("--json", action="store_true", help="Emit JSON output")
+    parser.add_argument(
+        "--list-risky-ports",
+        action="store_true",
+        help="Print the risky ingress ports checked by security group scanning and exit",
+    )
     parser.add_argument(
         "--min-severity",
         choices=tuple(SEVERITY_ORDER.keys()),
@@ -370,7 +375,11 @@ def main() -> int:
         help="Suppress findings for this service",
     )
     parser.add_argument("--version", action="version", version=f"public-exposure-scan {VERSION}")
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
+
+    if args.list_risky_ports:
+        print("\n".join(str(port) for port in sorted(RISKY_PORTS)))
+        return 0
 
     findings: list[dict[str, Any]] = []
     findings.extend(list_public_s3_buckets())

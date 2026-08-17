@@ -1,3 +1,5 @@
+import contextlib
+import io
 import unittest
 
 from scripts.public_exposure_scan import (
@@ -7,6 +9,7 @@ from scripts.public_exposure_scan import (
     filter_findings_by_service,
     filter_findings_by_status,
     is_policy_public,
+    main,
 )
 
 
@@ -93,11 +96,25 @@ class ServiceFilterTests(unittest.TestCase):
 
 
 class RiskyPortsTests(unittest.TestCase):
+    def test_includes_smb_and_netbios_ports(self):
+        self.assertTrue({139, 445}.issubset(RISKY_PORTS))
+
     def test_includes_winrm_and_memcached_ports(self):
         self.assertTrue({5985, 5986, 11211}.issubset(RISKY_PORTS))
 
     def test_includes_public_nfs_port(self):
         self.assertIn(2049, RISKY_PORTS)
+
+
+class CliTests(unittest.TestCase):
+    def test_lists_risky_ports_without_scanning_aws(self):
+        output = io.StringIO()
+
+        with contextlib.redirect_stdout(output):
+            exit_code = main(["--list-risky-ports"])
+
+        self.assertEqual(0, exit_code)
+        self.assertIn("445\n", output.getvalue())
 
 
 if __name__ == "__main__":
