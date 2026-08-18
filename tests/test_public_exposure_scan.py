@@ -1,6 +1,7 @@
 import contextlib
 import io
 import unittest
+from unittest.mock import patch
 
 from scripts.public_exposure_scan import (
     RISKY_PORTS,
@@ -10,6 +11,7 @@ from scripts.public_exposure_scan import (
     filter_findings_by_status,
     is_policy_public,
     main,
+    summarize_findings,
 )
 
 
@@ -26,6 +28,11 @@ class PolicyPublicTests(unittest.TestCase):
 
     def test_detects_allow_not_principal(self):
         policy = '{"Statement": {"Effect": "Allow", "NotPrincipal": {"AWS": "arn:aws:iam::123456789012:root"}}}'
+
+        self.assertTrue(is_policy_public(policy))
+
+    def test_detects_public_principal_list(self):
+        policy = '{"Statement": {"Effect": "Allow", "Principal": ["*"]}}'
 
         self.assertTrue(is_policy_public(policy))
 
@@ -106,6 +113,25 @@ class RiskyPortsTests(unittest.TestCase):
         self.assertIn(2049, RISKY_PORTS)
 
 
+class SummaryTests(unittest.TestCase):
+    def test_summarizes_findings_by_status_severity_and_service(self):
+        findings = [
+            {"resource": "bucket-a", "service": "s3", "status": "fail", "severity": "high"},
+            {"resource": "sg-1", "service": "security-group", "status": "fail", "severity": "high"},
+            {"resource": "api", "service": "apigateway", "status": "warn", "severity": "info"},
+        ]
+
+        summary = summarize_findings(findings)
+
+        self.assertEqual(3, summary["total"])
+        self.assertEqual({"fail": 2, "warn": 1}, summary["by_status"])
+        self.assertEqual({"high": 2, "info": 1}, summary["by_severity"])
+        self.assertEqual(
+            {"s3": 1, "security-group": 1, "apigateway": 1},
+            summary["by_service"],
+        )
+
+
 class CliTests(unittest.TestCase):
     def test_lists_risky_ports_without_scanning_aws(self):
         output = io.StringIO()
@@ -115,6 +141,22 @@ class CliTests(unittest.TestCase):
 
         self.assertEqual(0, exit_code)
         self.assertIn("445\n", output.getvalue())
+
+    def test_emits_empty_json_summary(self):
+        output = io.StringIO()
+
+        with (
+            patch("scripts.public_exposure_scan.list_public_s3_buckets", return_value=[]),
+            patch("scripts.public_exposure_scan.list_public_ec2", return_value=[]),
+            patch("scripts.public_exposure_scan.list_security_group_exposure", return_value=[]),
+            patch("scripts.public_exposure_scan.list_api_gateways", return_value=[]),
+            contextlib.redirect_stdout(output),
+        ):
+            exit_code = main(["--json", "--summary", "--exclude-service", "s3"])
+
+        self.assertEqual(0, exit_code)
+        self.assertIn('"summary"', output.getvalue())
+        self.assertIn('"total": 0', output.getvalue())
 
 
 if __name__ == "__main__":

@@ -43,6 +43,8 @@ def is_policy_public(policy_text: str) -> bool:
 
         if principal == "*":
             return True
+        if isinstance(principal, list) and "*" in principal:
+            return True
 
         not_principal = st.get("NotPrincipal")
         if not_principal:
@@ -56,6 +58,26 @@ def is_policy_public(policy_text: str) -> bool:
                     return True
 
     return False
+
+
+def summarize_findings(findings: List[Dict[str, Any]]) -> Dict[str, Any]:
+    summary: Dict[str, Any] = {
+        "total": len(findings),
+        "by_status": {},
+        "by_severity": {},
+        "by_service": {},
+    }
+
+    for finding in findings:
+        for field, bucket in (
+            ("status", "by_status"),
+            ("severity", "by_severity"),
+            ("service", "by_service"),
+        ):
+            value = str(finding.get(field, "unknown")).lower()
+            summary[bucket][value] = summary[bucket].get(value, 0) + 1
+
+    return summary
 
 
 def filter_findings_by_min_severity(
@@ -349,6 +371,11 @@ def main(argv: List[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="AWS public exposure scan")
     parser.add_argument("--json", action="store_true", help="Emit JSON output")
     parser.add_argument(
+        "--summary",
+        action="store_true",
+        help="Include summary counts when used with --json",
+    )
+    parser.add_argument(
         "--list-risky-ports",
         action="store_true",
         help="Print the risky ingress ports checked by security group scanning and exit",
@@ -392,6 +419,9 @@ def main(argv: List[str] | None = None) -> int:
     findings = exclude_findings_by_service(findings, args.exclude_service)
 
     if args.json:
+        if args.summary:
+            print(json.dumps({"summary": summarize_findings(findings), "findings": findings}, indent=2))
+            return 0
         print(json.dumps(findings, indent=2))
         return 0
 
