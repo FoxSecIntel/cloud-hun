@@ -11,6 +11,7 @@ from scripts.public_exposure_scan import (
     filter_findings_by_status,
     is_policy_public,
     main,
+    sanitize_aws_error,
     summarize_findings,
 )
 
@@ -113,6 +114,20 @@ class RiskyPortsTests(unittest.TestCase):
         self.assertIn(2049, RISKY_PORTS)
 
 
+class ErrorSanitizationTests(unittest.TestCase):
+    def test_redacts_aws_credential_values_from_errors(self):
+        message = (
+            "failed for AKIAIOSFODNN7EXAMPLE with "
+            "aws_secret_access_key=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+        )
+
+        sanitized = sanitize_aws_error(message)
+
+        self.assertNotIn("AKIAIOSFODNN7EXAMPLE", sanitized)
+        self.assertNotIn("wJalrXUtnFEMI", sanitized)
+        self.assertIn("[REDACTED_AWS_ACCESS_KEY]", sanitized)
+
+
 class SummaryTests(unittest.TestCase):
     def test_summarizes_findings_by_status_severity_and_service(self):
         findings = [
@@ -157,6 +172,29 @@ class CliTests(unittest.TestCase):
         self.assertEqual(0, exit_code)
         self.assertIn('"summary"', output.getvalue())
         self.assertIn('"total": 0', output.getvalue())
+
+    def test_fail_on_findings_returns_nonzero_after_filters(self):
+        output = io.StringIO()
+        finding = {
+            "service": "security-group",
+            "resource": "sg-1",
+            "status": "fail",
+            "severity": "high",
+            "confidence": "high",
+            "details": {"group_name": "web", "risky_rules": [{}]},
+        }
+
+        with (
+            patch("scripts.public_exposure_scan.list_public_s3_buckets", return_value=[]),
+            patch("scripts.public_exposure_scan.list_public_ec2", return_value=[]),
+            patch("scripts.public_exposure_scan.list_security_group_exposure", return_value=[finding]),
+            patch("scripts.public_exposure_scan.list_api_gateways", return_value=[]),
+            contextlib.redirect_stdout(output),
+        ):
+            exit_code = main(["--fail-on-findings", "--service", "security-group"])
+
+        self.assertEqual(2, exit_code)
+        self.assertIn("sg-1", output.getvalue())
 
 
 if __name__ == "__main__":

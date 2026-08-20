@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import subprocess
 from typing import Any, Dict, List
 
@@ -12,6 +13,15 @@ VERSION = "1.0.0"
 SEVERITY_ORDER = {"info": 0, "warn": 1, "medium": 2, "high": 3, "critical": 4}
 STATUSES = ("pass", "warn", "fail", "unknown")
 SERVICES = ("s3", "ec2", "security-group", "apigateway")
+AWS_ACCESS_KEY_RE = re.compile(r"\b(?:A3T|AKIA|ASIA|AGPA|AIDA|AROA|AIPA|ANPA)[A-Z0-9]{16}\b")
+AWS_SECRET_ASSIGNMENT_RE = re.compile(
+    r"(?i)\b(aws_secret_access_key|secret_access_key|session_token)\s*=\s*\S+"
+)
+
+
+def sanitize_aws_error(message: str) -> str:
+    sanitized = AWS_ACCESS_KEY_RE.sub("[REDACTED_AWS_ACCESS_KEY]", message)
+    return AWS_SECRET_ASSIGNMENT_RE.sub(r"\1=[REDACTED]", sanitized)
 
 
 def run_aws(args: List[str]) -> dict:
@@ -21,7 +31,7 @@ def run_aws(args: List[str]) -> dict:
         text=True,
     )
     if proc.returncode != 0:
-        raise RuntimeError(proc.stderr.strip() or "aws command failed")
+        raise RuntimeError(sanitize_aws_error(proc.stderr.strip()) or "aws command failed")
     return json.loads(proc.stdout) if proc.stdout.strip() else {}
 
 
@@ -401,6 +411,11 @@ def main(argv: List[str] | None = None) -> int:
         choices=SERVICES,
         help="Suppress findings for this service",
     )
+    parser.add_argument(
+        "--fail-on-findings",
+        action="store_true",
+        help="Exit with code 2 when findings remain after filters",
+    )
     parser.add_argument("--version", action="version", version=f"public-exposure-scan {VERSION}")
     args = parser.parse_args(argv)
 
@@ -421,9 +436,9 @@ def main(argv: List[str] | None = None) -> int:
     if args.json:
         if args.summary:
             print(json.dumps({"summary": summarize_findings(findings), "findings": findings}, indent=2))
-            return 0
+            return 2 if args.fail_on_findings and findings else 0
         print(json.dumps(findings, indent=2))
-        return 0
+        return 2 if args.fail_on_findings and findings else 0
 
     print("cloud-hun: public exposure scan")
     print("SERVICE\tRESOURCE\tSTATUS\tSEVERITY\tCONFIDENCE\tDETAIL")
@@ -451,7 +466,7 @@ def main(argv: List[str] | None = None) -> int:
             f"{f.get('severity', 'info')}\t{f.get('confidence', 'low')}\t{detail_str}"
         )
 
-    return 0
+    return 2 if args.fail_on_findings and findings else 0
 
 
 if __name__ == "__main__":
